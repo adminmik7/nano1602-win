@@ -141,16 +141,14 @@ void updateDisplay() {
   lcd.print("CPU:");
   int cpu = constrain((int)cpuLoad, 0, 100);
   lcd.print(cpu);
-  if (cpu < 10) lcd.print(" ");
-  lcd.print("%");
-  drawBar(9, 0, cpuLoad, 7);
+  lcd.print("% ");
+  drawBar(9, 0, cpuLoad, 6);
 
-  // ─── Строка 2: RAM ───────────────────────────────────
+  // ─── Строка 2: RAM ───────────────────────────────────  
   lcd.setCursor(0, 1);
   lcd.print("RAM:");
   int ram = constrain((int)ramUsage, 0, 100);
   lcd.print(ram);
-  if (ram < 10) lcd.print(" ");
-  lcd.print("%");
-  drawBar(9, 1, ramUsage, 7);
+  lcd.print("% ");
+  drawBar(9, 1, ramUsage, 6);
 }
