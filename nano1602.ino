@@ -59,10 +59,12 @@ void loop() {
     }
   }
 
-  // Если данных нет 3 секунды — мигающий WAIT на чистом экране
+  // Если данных нет 3 секунды — режим ожидания
   if (millis() - lastUpdate > 3000) {
     if (!waitState) {
-      lcd.clear();
+      lcd.clear(); // Полная очистка экрана при переходе в WAIT
+      lcd.setCursor(6, 0);
+      lcd.print("WAIT");
       waitState = true;
       lastBlink = millis();
     }
@@ -70,8 +72,8 @@ void loop() {
     if (millis() - lastBlink > 800) {
       static bool visible = true;
       lcd.setCursor(6, 0);
-      if (visible) lcd.print("WAIT");
-      else lcd.print("    ");
+      if (visible) lcd.print("    "); // Стираем
+      else lcd.print("WAIT");        // Пишем
       visible = !visible;
       lastBlink = millis();
     }
