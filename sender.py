@@ -108,57 +108,51 @@ def find_port():
     return None
 
 
-# ─── CPU / RAM metrics (no psutil) ────────────────────────
+# ─── CPU / RAM metrics ─────────────────────────────────
 
-
-def _read_proc_stat():
-    """Read CPU idle/total from /proc/stat."""
-    with open("/proc/stat") as f:
-        parts = f.readline().split()
-    idle = int(parts[3]) + int(parts[4])
-    total = sum(int(x) for x in parts[1:])
-    return idle, total
-
-
-_cpu_prev = _read_proc_stat()
-
-
-def get_cpu_proc():
-    """CPU % over last interval."""
-    global _cpu_prev
-    time.sleep(0.5)
-    idle2, total2 = _read_proc_stat()
-    idle_d = idle2 - _cpu_prev[0]
-    total_d = total2 - _cpu_prev[1]
-    _cpu_prev = (idle2, total2)
-    if total_d == 0:
-        return 0.0
-    return max(0.0, min(100.0, (1 - idle_d / total_d) * 100))
-
-
-def get_ram_proc():
-    """RAM usage % from /proc/meminfo."""
-    mem = {}
-    with open("/proc/meminfo") as f:
-        for line in f:
-            parts = line.split()
-            mem[parts[0].rstrip(":")] = int(parts[1])
-    total = mem.get("MemTotal", 0)
-    avail = mem.get("MemAvailable", mem.get("MemFree", 0))
-    if total == 0:
-        return 0.0
-    return max(0.0, min(100.0, (1 - avail / total) * 100))
-
-
-# Select metric source
-if _psutil_available:
-
+# Windows uses psutil; Linux can use /proc fallback
+if os.name == 'nt' or _psutil_available:
+    # On Windows, psutil is the only way
     def get_cpu():
         return psutil.cpu_percent(interval=0.5)
 
     def get_ram():
         return psutil.virtual_memory().percent
+
 else:
+    # Linux /proc fallback (only if psutil is missing)
+    def _read_proc_stat():
+        with open("/proc/stat") as f:
+            parts = f.readline().split()
+        idle = int(parts[3]) + int(parts[4])
+        total = sum(int(x) for x in parts[1:])
+        return idle, total
+
+    _cpu_prev = _read_proc_stat()
+
+    def get_cpu_proc():
+        global _cpu_prev
+        time.sleep(0.5)
+        idle2, total2 = _read_proc_stat()
+        idle_d = idle2 - _cpu_prev[0]
+        total_d = total2 - _cpu_prev[1]
+        _cpu_prev = (idle2, total2)
+        if total_d == 0:
+            return 0.0
+        return max(0.0, min(100.0, (1 - idle_d / total_d) * 100))
+
+    def get_ram_proc():
+        mem = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                parts = line.split()
+                mem[parts[0].rstrip(":")] = int(parts[1])
+        total = mem.get("MemTotal", 0)
+        avail = mem.get("MemAvailable", mem.get("MemFree", 0))
+        if total == 0:
+            return 0.0
+        return max(0.0, min(100.0, (1 - avail / total) * 100))
+
     get_cpu = get_cpu_proc
     get_ram = get_ram_proc
 
