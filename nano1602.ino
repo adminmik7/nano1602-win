@@ -186,8 +186,9 @@ void updateDisplay() {
   lcd.print("CPU:");
   if (cpu < 10) lcd.print(" ");
   lcd.print(cpu);
-  lcd.print("% ");
-  drawBar(9, 0, cpuLoad, 5); // Сдвинули бар, чтобы влезло ровно 16 символов
+  lcd.print("% [");
+  drawBar(8, 0, cpuLoad, 5); 
+  lcd.print("] "); // Пробел в конце для очистки хвоста
 
   // ─── Строка 2: RAM ───────────────────────────────────
   lcd.setCursor(0, 1);
@@ -195,6 +196,7 @@ void updateDisplay() {
   lcd.print("RAM:");
   if (ram < 10) lcd.print(" ");
   lcd.print(ram);
-  lcd.print("% ");
-  drawBar(9, 1, ramUsage, 5);
+  lcd.print("% [");
+  drawBar(8, 1, ramUsage, 5);
+  lcd.print("] ");
 }
