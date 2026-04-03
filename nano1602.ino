@@ -1,12 +1,7 @@
 /*
  * PC Monitor — Arduino Nano + LCD1602 (I2C)
- * Line 1: CPU load + progress bar
- * Line 2: RAM usage + progress bar
- * Data via USB Serial @ 9600 baud
- *
- * Format:  CPU:XX|RAM:XX
- * Example: CPU:45|RAM:62
- *
+ * Windows Edition
+ * 
  * Wiring:
  *   SDA -> A4
  *   SCL -> A5
@@ -17,188 +12,93 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// LCD1602 — адрес 0x27 (если не работает, попробуй 0x3F)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// ─── Кастомные символы ───────────────────────────────────
-byte blockFull[8] = {
+// Кастомный символ для шкалы
+byte block[8] = {
   B11111, B11111, B11111, B11111,
   B11111, B11111, B11111, B11111
 };
 
-byte blockEmpty[8] = {
-  B11111, B10001, B10001, B10001,
-  B10001, B10001, B10001, B11111
-};
-
-// ─── Состояние ───────────────────────────────────────────
-float cpuLoad  = 0.0;
-float ramUsage = 0.0;
-
+int cpu = 0, ram = 0;
 unsigned long lastUpdate = 0;
-bool connected = false;
+char input[32];
+byte idx = 0;
 
-static const unsigned long TIMEOUT_MS = 5000;
-
-// ─── Буфер (C-стиль, без String, без фрагментации) ─────
-static const byte MAX_BUF = 64;
-char buffer[MAX_BUF];
-byte bufPos = 0;
-
-// ─── Экран ожидания ─────────────────────────────────────
-static bool waitingShown = false;
-static byte dots = 0;
-static unsigned long lastWaitingDraw = 0;
-
-// ─── SETUP ───────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
-
-  // LCD
+  
   lcd.init();
   lcd.backlight();
-  lcd.createChar(0, blockFull);
-  lcd.createChar(1, blockEmpty);
-
-  // Приветствие
-  lcd.clear();
+  lcd.createChar(0, block);
+  
   lcd.setCursor(0, 0);
-  lcd.print("   PC Monitor    ");
+  lcd.print("  PC Monitor   ");
   lcd.setCursor(0, 1);
-  lcd.print(" Waiting for PC  ");
-  delay(2000);
-
-  // Очищаем буфер
-  memset(buffer, 0, sizeof(buffer));
-  bufPos = 0;
-  waitingShown = false;
-
-  Serial.println("Nano1602 PC Monitor v1.0 — Ready");
+  lcd.print("  Ready...     ");
+  delay(1500);
 }
 
-// ─── LOOP ────────────────────────────────────────────────
 void loop() {
-  // Читаем Serial
-  while (Serial.available() > 0) {
+  // Чтение данных из Serial
+  while (Serial.available()) {
     char c = Serial.read();
     if (c == '\n') {
-      buffer[bufPos] = '\0';
-      parseData(buffer);
-      bufPos = 0;
-      memset(buffer, 0, sizeof(buffer));
-    } else if (bufPos < MAX_BUF - 1) {
-      buffer[bufPos++] = c;
+      input[idx] = 0;
+      parseInput();
+      idx = 0;
+    } else if (idx < 31) {
+      input[idx++] = c;
     }
   }
 
-  // Таймаут — 5 сек без данных
-  if (millis() - lastUpdate > TIMEOUT_MS) {
-    connected = false;
-  }
-
-  updateDisplay();
-  delay(200);
-}
-
-// ─── Парсинг данных ─────────────────────────────────────
-void parseData(char* data) {
-  // Ищем CPU: и RAM:
-  char* cpuPtr = strstr(data, "CPU:");
-  char* ramPtr = strstr(data, "RAM:");
-
-  if (cpuPtr != NULL) {
-    cpuPtr += 4;
-    char* end = strchr(cpuPtr, '|');
-    if (end == NULL) end = cpuPtr + strlen(cpuPtr);
-    char temp[8];
-    int len = min((int)(end - cpuPtr), 7);
-    strncpy(temp, cpuPtr, len);
-    temp[len] = '\0';
-    cpuLoad = atof(temp);
-  }
-
-  if (ramPtr != NULL) {
-    ramPtr += 4;
-    char* end = strchr(ramPtr, '|');
-    if (end == NULL) end = ramPtr + strlen(ramPtr);
-    char temp[8];
-    int len = min((int)(end - ramPtr), 7);
-    strncpy(temp, ramPtr, len);
-    temp[len] = '\0';
-    ramUsage = atof(temp);
-  }
-
-  lastUpdate = millis();
-  connected = true;
-  Serial.println("OK");
-}
-
-// ─── Прогресс-бар ───────────────────────────────────────
-void drawBar(int col, int row, float value, int bars) {
-  int filled = map(constrain((int)value, 0, 100), 0, 100, 0, bars);
-
-  lcd.setCursor(col, row);
-  for (int i = 0; i < bars; i++) {
-    if (i < filled) lcd.write((byte)0); // Полный блок
-    else lcd.print(" "); // Пустое место
-    if (i < bars - 1) lcd.print(" "); // Пробел между блоками
-  }
-}
-
-// ─── Экран ожидания (без lcd.clear!) ────────────────────
-void showWaitingScreen() {
-  // Рисуем только раз, потом обновляем точки
-  if (!waitingShown) {
+  // Если данных нет 5 секунд — ждем
+  if (millis() - lastUpdate > 5000) {
     lcd.setCursor(0, 0);
-    lcd.print("Waiting for PC  ");
+    lcd.print("Waiting for PC ");
     lcd.setCursor(0, 1);
-    lcd.print("Connecting");
-    waitingShown = true;
-  }
-
-  // Обновляем точки каждые 500мс
-  if (millis() - lastWaitingDraw > 500) {
-    lastWaitingDraw = millis();
-    // Очищаем область точек (6 символов)
-    lcd.setCursor(10, 1);
-    for (int i = 0; i < 6; i++) lcd.print(' ');
-    // Рисуем точки
-    lcd.setCursor(10, 1);
-    for (int i = 0; i < (dots % 4); i++) lcd.print('.');
-    dots++;
-  }
-}
-
-// ─── Главный цикл дисплея ──────────────────────────────
-void updateDisplay() {
-  if (!connected) {
-    showWaitingScreen();
+    lcd.print("---------------");
     return;
   }
 
-  // Первичная очистка при возврате из режима ожидания
-  if (waitingShown) {
-    lcd.clear();
-    waitingShown = false;
-  }
+  updateScreen();
+}
 
-  // ─── Строка 1: CPU ───────────────────────────────────
+void parseInput() {
+  // Ищем "CPU:XX|RAM:XX"
+  char* cPtr = strstr(input, "CPU:");
+  char* rPtr = strstr(input, "RAM:");
+  
+  if (cPtr) cpu = atoi(cPtr + 4);
+  if (rPtr) ram = atoi(rPtr + 4);
+  
+  lastUpdate = millis();
+  Serial.println("OK");
+}
+
+void updateScreen() {
+  // Формат: CPU:XX% [||||] (ровно 16 символов)
   lcd.setCursor(0, 0);
-  int cpu = constrain((int)cpuLoad, 0, 100);
   lcd.print("CPU:");
   if (cpu < 10) lcd.print(" ");
   lcd.print(cpu);
-  lcd.print("% ");
-  drawBar(7, 0, cpuLoad, 4); // 4 блока с пробелами
-  lcd.print("   "); // Очистка хвоста
+  lcd.print("%  [");
+  drawBar(cpu, 4);
+  lcd.print("] "); // Пробел для очистки хвоста
 
-  // ─── Строка 2: RAM ───────────────────────────────────
   lcd.setCursor(0, 1);
-  int ram = constrain((int)ramUsage, 0, 100);
   lcd.print("RAM:");
   if (ram < 10) lcd.print(" ");
   lcd.print(ram);
-  lcd.print("% ");
-  drawBar(7, 1, ramUsage, 4);
-  lcd.print("   ");
+  lcd.print("%  [");
+  drawBar(ram, 4);
+  lcd.print("] ");
+}
+
+void drawBar(int val, int len) {
+  int blocks = map(constrain(val, 0, 100), 0, 100, 0, len);
+  for (int i = 0; i < len; i++) {
+    if (i < blocks) lcd.write((byte)0);
+    else lcd.print(" ");
+  }
 }
