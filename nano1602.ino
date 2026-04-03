@@ -68,11 +68,11 @@ void loop() {
     }
     
     if (millis() - lastBlink > 800) {
+      static bool visible = true;
       lcd.setCursor(6, 0);
-      lcd.print("WAIT");
-      delay(800);
-      lcd.setCursor(6, 0);
-      lcd.print("    ");
+      if (visible) lcd.print("WAIT");
+      else lcd.print("    ");
+      visible = !visible;
       lastBlink = millis();
     }
     return;
