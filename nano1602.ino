@@ -139,7 +139,9 @@ void drawBar(int col, int row, float value, int bars) {
 
   lcd.setCursor(col, row);
   for (int i = 0; i < bars; i++) {
-    lcd.write((byte)(i < filled ? 0 : 1));
+    if (i < filled) lcd.write((byte)0); // Полный блок
+    else lcd.print(" "); // Пустое место
+    if (i < bars - 1) lcd.print(" "); // Пробел между блоками
   }
 }
 
@@ -186,9 +188,9 @@ void updateDisplay() {
   lcd.print("CPU:");
   if (cpu < 10) lcd.print(" ");
   lcd.print(cpu);
-  lcd.print("%  ");
-  drawBar(7, 0, cpuLoad, 6); // 6 блоков без скобок
-  lcd.print(" "); // Очистка последнего символа
+  lcd.print("% ");
+  drawBar(7, 0, cpuLoad, 4); // 4 блока с пробелами
+  lcd.print("   "); // Очистка хвоста
 
   // ─── Строка 2: RAM ───────────────────────────────────
   lcd.setCursor(0, 1);
@@ -196,7 +198,7 @@ void updateDisplay() {
   lcd.print("RAM:");
   if (ram < 10) lcd.print(" ");
   lcd.print(ram);
-  lcd.print("%  ");
-  drawBar(7, 1, ramUsage, 6);
-  lcd.print(" ");
+  lcd.print("% ");
+  drawBar(7, 1, ramUsage, 4);
+  lcd.print("   ");
 }
