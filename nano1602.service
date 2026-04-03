@@ -1,0 +1,16 @@
+[Unit]
+Description=Arduino Nano LCD1602 PC Monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/nano1602/sender.py
+WorkingDirectory=/opt/nano1602
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

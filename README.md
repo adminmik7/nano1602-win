@@ -72,6 +72,25 @@ chmod +x start.sh
 ./start.sh setup
 ```
 
+## ⚙️ Автозапуск (Systemd)
+Чтобы монитор запускался сам при включении компьютера:
+
+1. **Скопируй файлы** в системную папку:
+   ```bash
+   sudo cp -r . /opt/nano1602
+   sudo cp nano1602.service /etc/systemd/system/
+   ```
+
+2. **Включи сервис:**
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now nano1602.service
+   ```
+
+3. **Проверь статус:**
+   ```bash
+   sudo systemctl status nano1602.service
+   ```
 ---
 
 ## 📊 Зависимости
