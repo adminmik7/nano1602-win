@@ -32,11 +32,16 @@ void setup() {
   lcd.backlight();
   lcd.createChar(0, block);
   
+  // Имитация загрузки
   lcd.setCursor(0, 0);
   lcd.print("  PC Monitor   ");
-  lcd.setCursor(0, 1);
-  lcd.print("  Ready...     ");
-  delay(1500);
+  for (int i = 0; i < 16; i++) {
+    lcd.setCursor(i, 1);
+    lcd.write((byte)0);
+    delay(50);
+  }
+  delay(500);
+  lcd.clear();
 }
 
 void loop() {
@@ -52,12 +57,12 @@ void loop() {
     }
   }
 
-  // Если данных нет 5 секунд — ждем
-  if (millis() - lastUpdate > 5000) {
+  // Если данных нет 3 секунды — показываем WAIT
+  if (millis() - lastUpdate > 3000) {
     lcd.setCursor(0, 0);
-    lcd.print("Waiting for PC ");
+    lcd.print(" CPU: --%      ");
     lcd.setCursor(0, 1);
-    lcd.print("---------------");
+    lcd.print(" RAM: --% WAIT ");
     return;
   }
 
