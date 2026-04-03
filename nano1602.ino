@@ -22,6 +22,8 @@ byte block[8] = {
 
 int cpu = 0, ram = 0;
 unsigned long lastUpdate = 0;
+bool waitState = false;
+unsigned long lastBlink = 0;
 char input[32];
 byte idx = 0;
 
@@ -57,12 +59,14 @@ void loop() {
     }
   }
 
-  // Если данных нет 3 секунды — показываем WAIT
+  // Если данных нет 3 секунды — мигающий WAIT
   if (millis() - lastUpdate > 3000) {
-    lcd.setCursor(0, 0);
-    lcd.print(" CPU: --%      ");
-    lcd.setCursor(0, 1);
-    lcd.print(" RAM: --% WAIT ");
+    if (millis() - lastBlink > 800) { // Медленное мигание
+      waitState = !waitState;
+      lcd.setCursor(6, 0);
+      lcd.print(waitState ? "WAIT" : "    ");
+      lastBlink = millis();
+    }
     return;
   }
 
