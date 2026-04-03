@@ -1,20 +1,22 @@
-# 🔌 nano1602-win — Windows Edition
+# 🔌 nano1602-win — Монитор ПК для Windows
 
-CPU load + RAM usage on a 16×2 I2C display. Data sent via USB Serial.
-**This version is optimized for Windows users.**
+**Последний релиз:** [v1.1.0](https://github.com/adminmik7/nano1602-win/releases/tag/v1.1.0) 🚀
+
+Отображение загрузки CPU и RAM на LCD-экране 16x2 (I2C). Данные передаются через USB.
+**Эта версия оптимизирована специально для пользователей Windows.**
 
 ---
 
-## 📁 Files
+## 📁 Файлы проекта
 
-| File | Purpose |
+| Файл | Назначение |
 |---|---|
-| `nano1602.ino` | Arduino Nano firmware |
-| `sender.py` | Python script to send data |
-| `requirements.txt` | Python dependencies |
-| `start.bat` | **One-click launcher for Windows** |
+| `nano1602.ino` | Прошивка для Arduino Nano |
+| `sender.py` | Python-скрипт для отправки данных с ПК |
+| `start.bat` | **Файл для запуска в один клик (Windows)** |
+| `requirements.txt` | Список зависимостей для Python |
 
-## 🔌 Connection
+## 🔌 Схема подключения
 
 ```
 Arduino Nano          LCD1602 (I2C)
@@ -23,22 +25,36 @@ A4 (SDA)      ─────►  SDA
 A5 (SCL)      ─────►  SCL
 5V            ─────►  VCC
 GND           ─────►  GND
-USB           ─────►  PC
+USB           ─────►  Компьютер
 ```
-*I2C Address: 0x27 (or 0x3F)*
+*I2C адрес дисплея: обычно **0x27** (реже 0x3F)*
 
-## 🚀 Quick Start (Windows)
+## 🚀 Быстрый старт в Windows
 
-### 1. Arduino Setup
-Upload `nano1602.ino` to your board using Arduino IDE.
+### Шаг 1: Arduino
+1. Подключи Arduino Nano к компьютеру.
+2. Открой `nano1602.ino` в **Arduino IDE**.
+3. Установи библиотеку `LiquidCrystal_I2C` через менеджер библиотек.
+4. Залей скетч в плату.
 
-### 2. Windows PC Setup
-1. **Install Python:** Download from [python.org](https://www.python.org/downloads/).
-   > ⚠️ **Important:** During installation, check **"Add Python to PATH"**.
-2. **Download Project:** Get the latest release from the [Releases page](https://github.com/adminmik7/nano1602-win/releases).
-3. **Run:** Double-click **`start.bat`**.
+### Шаг 2: Настройка ПК
+1. **Установи Python:** Скачай с [python.org](https://www.python.org/downloads/).
+   > ⚠️ **Важно:** При установке обязательно поставь галочку **"Add Python to PATH"**.
+2. **Скачай проект:** Возьми архив из раздела [Releases](https://github.com/adminmik7/nano1602-win/releases).
+3. **Запусти:** Просто дважды кликни по файлу **`start.bat`**.
 
-The script will automatically install `pyserial` and `psutil` and start sending data.
+Скрипт сам найдет твою Arduino (даже если у тебя много COM-портов), установит нужные библиотеки и начнет мониторинг.
 
-## ⚙️ Manual Port Selection
-If the script doesn't find your Arduino automatically, edit `sender.py` and change the `port` variable to your COM port (e.g., `COM3`).
+## ❓ Частые проблемы
+
+| Проблема | Решение |
+|---|---|
+| **Ничего не происходит** | Убедись, что ты отметил галочку "Add Python to PATH" при установке Python. |
+| **Экран не горит** | Проверь подключение 5V и GND. Покрути потенциометр на задней стороне I2C-модуля. |
+| **Крякозябры на экране** | Не совпадает I2C адрес. Попробуй изменить `0x27` на `0x3F` в коде `nano1602.ino`. |
+
+---
+
+## 📞 Контакты
+*   GitHub: [@adminmik7](https://github.com/adminmik7)
+*   Если возникли вопросы — создавай Issue в репозитории!
