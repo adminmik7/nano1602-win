@@ -77,22 +77,22 @@ void parseInput() {
 }
 
 void updateScreen() {
-  // Формат: CPU:XXX% [||||] (всегда 3 знака под число)
+  // Формат: CPU:XXX% |||||| (6 блоков без скобок)
   lcd.setCursor(0, 0);
   lcd.print("CPU:");
-  if (cpu < 100) lcd.print(" "); // Добавляем пробел, если число < 100
+  if (cpu < 100) lcd.print(" ");
   lcd.print(cpu);
-  lcd.print("% [");
-  drawBar(cpu, 4);
-  lcd.print("] "); // Пробел для очистки хвоста
+  lcd.print("%  ");
+  drawBar(cpu, 6);
+  lcd.print(" "); // Очистка хвоста
 
   lcd.setCursor(0, 1);
   lcd.print("RAM:");
   if (ram < 100) lcd.print(" ");
   lcd.print(ram);
-  lcd.print("% [");
-  drawBar(ram, 4);
-  lcd.print("] ");
+  lcd.print("%  ");
+  drawBar(ram, 6);
+  lcd.print(" ");
 }
 
 void drawBar(int val, int len) {
