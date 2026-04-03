@@ -38,8 +38,8 @@ echo [*] Installed Python version:
 %PYTHON_CMD% --version
 echo.
 
-echo [*] Installing dependencies (pyserial, psutil)...
-%PYTHON_CMD% -m pip install pyserial psutil --quiet
+echo [*] Installing dependencies (pyserial, psutil, wmi)...
+%PYTHON_CMD% -m pip install pyserial psutil wmi --quiet
 
 echo.
 echo [*] Starting monitor... (Ctrl+C to stop)

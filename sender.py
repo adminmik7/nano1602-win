@@ -60,18 +60,41 @@ except ImportError:
 
 
 def find_port():
-    """Find available USB-Serial port (Cross-platform)."""
-    # Windows COM ports
-    if os.name == 'nt':
+    """Smart port detection: finds Arduino by hardware ID."""
+    
+    if os.name == 'nt': # Windows
+        try:
+            import wmi
+            c = wmi.WMI()
+            # Ищем устройства, в имени которых есть Arduino, CH340, FTDI или USB-SERIAL
+            for item in c.Win32_PnPEntity():
+                if item.Name and ( 
+                    "Arduino" in item.Name or 
+                    "CH340" in item.Name or 
+                    "FTDI" in item.Name or 
+                    "USB-SERIAL" in item.Name.upper() 
+                ):
+                    # Извлекаем номер COM-порта из имени (например, "... (COM3)")
+                    import re
+                    match = re.search(r"\(COM(\d+)\)", item.Name)
+                    if match:
+                        port = f"COM{match.group(1)}"
+                        print(f"[✓] Found Arduino device on {port}")
+                        return port
+        except:
+            pass # Если wmi не установлен, вернемся к простому перебору
+            
+        # Fallback: простой перебор COM-портов
         for i in range(1, 10):
             port = f"COM{i}"
             try:
                 with serial.Serial(port, 9600, timeout=0.5) as s:
                     s.reset_input_buffer()
                     return port
-            except serial.SerialException:
+            except:
                 continue
-    # Linux / Mac ports
+
+    # Linux / Mac
     else:
         for dev in sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*")):
             if os.path.exists(dev):
@@ -79,7 +102,7 @@ def find_port():
                     with serial.Serial(dev, 9600, timeout=0.5) as s:
                         s.reset_input_buffer()
                         return dev
-                except serial.SerialException:
+                except:
                     continue
                 
     return None
