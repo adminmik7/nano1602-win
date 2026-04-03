@@ -59,16 +59,25 @@ void loop() {
     }
   }
 
-  // Если данных нет 3 секунды — мигающий WAIT
+  // Если данных нет 3 секунды — мигающий WAIT на чистом экране
   if (millis() - lastUpdate > 3000) {
-    if (millis() - lastBlink > 800) { // Медленное мигание
-      waitState = !waitState;
+    if (!waitState) {
+      lcd.clear();
+      waitState = true;
+      lastBlink = millis();
+    }
+    
+    if (millis() - lastBlink > 800) {
       lcd.setCursor(6, 0);
-      lcd.print(waitState ? "WAIT" : "    ");
+      lcd.print("WAIT");
+      delay(800);
+      lcd.setCursor(6, 0);
+      lcd.print("    ");
       lastBlink = millis();
     }
     return;
   }
+  waitState = false;
 
   updateScreen();
 }
