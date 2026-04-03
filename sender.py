@@ -171,33 +171,42 @@ def main():
         print(f"Connected on {port} @ {BAUD} baud (Ctrl+C to stop)")
 
         while True:
-            cpu = get_cpu()
-            ram = get_ram()
-            line = f"CPU:{int(cpu)}|RAM:{int(ram)}\n"
-            ser.write(line.encode())
+            try:
+                cpu = get_cpu()
+                ram = get_ram()
+                line = f"CPU:{int(cpu)}|RAM:{int(ram)}\n"
+                ser.write(line.encode())
 
-            timeout = time.time() + 1
-            response = ""
-            while time.time() < timeout:
-                if ser.in_waiting:
-                    try:
-                        response = ser.readline().decode("utf-8", errors="replace").strip()
-                    except Exception:
-                        response = ""
-                    break
-                time.sleep(0.05)
+                timeout = time.time() + 1
+                response = ""
+                while time.time() < timeout:
+                    if ser.in_waiting:
+                        try:
+                            response = ser.readline().decode("utf-8", errors="replace").strip()
+                        except Exception:
+                            response = ""
+                        break
+                    time.sleep(0.05)
 
-            if response:
-                print(f"  {line.strip()}  ->  {response}")
-            else:
-                print(f"  {line.strip()}")
+                if response:
+                    print(f"  {line.strip()}  ->  {response}")
+                else:
+                    print(f"  {line.strip()}")
 
-            time.sleep(max(0, UPDATE_INTERVAL - 0.5))
+                time.sleep(max(0, UPDATE_INTERVAL - 0.5))
+            except (serial.SerialException, OSError):
+                print("\n[!] USB disconnected! Waiting for reconnection...")
+                time.sleep(2)
+                break # Выходим из цикла, чтобы перезапустить main()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nStopped.")
-        sys.exit(0)
+    while True:
+        try:
+            main()
+        except KeyboardInterrupt:
+            print("\nStopped.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\n[!] Error: {e}. Restarting...")
+            time.sleep(2)
